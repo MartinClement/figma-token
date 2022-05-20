@@ -1,0 +1,27 @@
+{
+  "name": "figma-token",
+  "version": "1.0.0",
+  "description": "Build design token from figma styles nodes",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MartinClement/figma-token.git"
+  },
+  "keywords": [
+    "figma",
+    "design-tokens"
+  ],
+  "author": "Clement Martin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MartinClement/figma-token/issues"
+  },
+  "homepage": "https://github.com/MartinClement/figma-token#readme",
+  "dependencies": {
+    "node-fetch": "^3.2.4"
+  }
+}
