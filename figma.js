@@ -1,77 +1,59 @@
-import fetch from 'node-fetch';
 import { exit } from 'process';
+import {
+  fetchFigma,
+  rgbToHexa,
+  buildArgs,
+  applyOptionTokenName,
+  buildCssTokens,
+} from './helpers/index.js';
 
-const FIGMA_API_TOKEN = "386950-5e226a7b-1748-4302-87cd-1eb7ee285487";
-const REQUIRED_ARGS = ['file'];
+import fs from 'fs';
+
+// const FIGMA_API_TOKEN = "386950-5e226a7b-1748-4302-87cd-1eb7ee285487";
+const REQUIRED_ARGS = ['apiKey', 'file'];
 
 const argv = process.argv.slice(2);
-const args = {};
-argv.forEach(arg => {
-  console.log(arg);
-  const [key, val] = arg.split(':');
+const args = buildArgs(argv);
 
-  args[key] = val;
-});
-
-if (!args.file) { 
+if (args.length < REQUIRED_ARGS.length) {
+  console.log(`Require at least those two args:
+    - file:<figma_file>
+    - apiKey:<figma_api_key>
+  `);
   exit(1);
 }
 
-const callFigma = async path => {
-  const headers = { 'X-Figma-Token': FIGMA_API_TOKEN };
-  const BASE_PATH = 'https://api.figma.com/v1';
-  const target = `${BASE_PATH}${path}`;
 
-  console.log(target);
-  const res = await fetch(target, { headers });
-  const data = await res.json();
+const { meta: { styles }} = await fetchFigma(`/files/${args.file}/styles`, args);
+const styleNodeIds = styles.map(({ node_id }) => node_id).join(',');
 
-  return data;
-}
-
-const rgbToHexa = ({ r, g, b}) =>  {
-  const hexa = [
-    (r * 255).toString(16),
-    (g * 255).toString(16),
-    (b * 255).toString(16),
-  ];
-
-  const normalized = hexa.map(v => {
-    const res =  v === '0' ? '00' : v.split('.')[0];
-    return res;
-  });
-
-  return `#${normalized.join('')}`;
-}
-
-const rawStyles = await callFigma(`/files/${args.file}/styles`);
-const styles = rawStyles.meta.styles.map(({ key, node_id, name }) => ({
-  key,
-  name,
-  nodeId: node_id,
-}));
-
-const nodeIds = styles.map(stl => stl.nodeId).join(',');
-const rawNodes = await callFigma(`/files/${args.file}/nodes?ids=${nodeIds}`);
-
-const { Decision, Options } = Object.entries(rawNodes.nodes)
+const { nodes } = await fetchFigma(`/files/${args.file}/nodes?ids=${styleNodeIds}`, args);
+const { decision, options } = Object.entries(nodes)
   .reduce((carr, [, { document: { fills, name } }]) => {
     const { r, g, b } = fills[0].color;
     const [category, ...rest] = name.split('/');
   
-    const token = { name: rest[rest.length - 1], value: rgbToHexa({ r, g, b }) };
-    return  { ...carr, [category]: [...carr[category], token] }
+    const token = { category: category.toLowerCase(), name: rest[rest.length - 1], value: rgbToHexa({ r, g, b }) };
+    return  { ...carr, [category.toLowerCase()]: [...carr[category.toLowerCase()], token] }
   },
-  { 'Decision': [], 'Options': [] },
+  { decision: [], options: [] },
   );
 
-  const processedDecision = Decision.map(token => {
-    const { name } = Options.find( opt => opt.value === token.value );
-    return { ...token, value: name };
-  });
+const DESIGN_TOKENS = applyOptionTokenName(options, decision);
 
-  const TOKENS = [...Options, ...processedDecision];
-  console.log(TOKENS);
+if (args.export === 'css') {
+  const cssTokens = buildCssTokens(DESIGN_TOKENS);
+  const cssExportFileContent = `:root {
+    ${cssTokens}
+  }`
+
+  fs.writeFile('./build/css/design_tokens.css', cssExportFileContent, function (err) {
+    if (err) throw err;
+    console.log('CSS TOken exported to ./build/css');
+ });
+}
+
+
 
  
 

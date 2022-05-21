@@ -1,0 +1,10 @@
+:root {
+    
+      --purple-100: #db00ff;
+      --red-100: #ff0000;
+      --green-100: #00ff00;
+      --blue-100: #0000ff;
+      --button-tertiary-background-color: var(--blue-100);
+      --button-secondary-background-color: var(--green-100);
+      --button-primary-background-color: var(--red-100);
+  }

@@ -1,0 +1,30 @@
+# Figma Style to Design Tokens files
+## Principle
+- Consume figma API to fetch all styles element from a given figma file.
+- From thoses styles, we can fetch all nodes. 
+- From thoses nodes, we can compute the component name and its value.
+
+### I.E
+``` js
+~$ node figma.js file:<your_file_id>
+[
+  { name: '--purple-100', value: '#db00ff' },
+  { name: '--red-100', value: '#ff0000' },
+  { name: '--green-100', value: '#00ff00' },
+  { name: '--blue-100', value: '#0000ff' },
+  { name: '--button-tertiary-background-color', value: '--blue-100' },
+  { name: '--button-secondary-background-color', value: '--green-100' },
+  { name: '--button-primary-background-color', value: '--red-100' }
+]
+```
+
+## TODO:
+- export tokens as a `ready to use css file`
+``` css
+:root {
+  --red-100: #ff00ff;
+  /* ... */
+  --button-primary-background-color: var(--red-100);
+}
+```
+- add Figma API Key as required param `apikey:XXXXXXX`
